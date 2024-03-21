@@ -4,7 +4,10 @@ import (
 	"fmt"
 	"net"
 	"os"
+	"strings"
 )
+
+const CRLF = "\r\n"
 
 func main() {
 	// You can use print statements as follows for debugging, they'll be visible when running tests.
@@ -17,10 +20,30 @@ func main() {
 	}
 
 	conn, err := l.Accept()
+	if err != nil {
+		fmt.Println("Error accepting connection: ", err.Error())
+	}
+	buf := make([]byte, 1024)
+	requestSize, err := conn.Read(buf)
+	if err != nil {
+		fmt.Println("Error accepting connection: ", err.Error())
+	}
+	request := string(buf[:requestSize])
+
+	lines := strings.Split(request, CRLF)
+	startLine := strings.Split(lines[0], " ")
+	method := startLine[0]
+	path := startLine[1]
+	versoin := startLine[2]
+
+	fmt.Printf("method: %s, path: %s, version: %s\n", method, path, versoin)
 
 	responseStatus := "HTTP/1.1 200 OK"
 	responseHeader := "" //Content-Length: 0
-	response := []byte(fmt.Sprintf("%s\r\n%s\r\n", responseStatus, responseHeader))
+	if path != "/" {
+		responseStatus = "HTTP/1.1 404 Not Found"
+	}
+	response := []byte(fmt.Sprintf("%s%s%s%s", responseStatus, CRLF, CRLF, responseHeader))
 	conn.Write(response)
 	if err != nil {
 		fmt.Println("Error accepting connection: ", err.Error())
