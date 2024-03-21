@@ -54,7 +54,7 @@ func main() {
 		msg = "Not Found"
 	}
 	statusLine := fmt.Sprintf("%s %d %s", req.version, status, msg)
-	response := []byte(fmt.Sprintf("%s%s%s%s", statusLine, CRLF, CRLF, responseHeader))
+	response := []byte(fmt.Sprintf("%s%s%s%s%s%s", statusLine, CRLF, CRLF, responseHeader, CRLF, responesBody))
 	conn.Write(response)
 	if err != nil {
 		fmt.Println("Error accepting connection: ", err.Error())
