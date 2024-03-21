@@ -47,7 +47,7 @@ func main() {
 
 		responseHeader += "Content-Type: text/plain"
 		responseHeader += CRLF
-		responseHeader += fmt.Sprintf("Content-Length: %d", len(echo)+1)
+		responseHeader += fmt.Sprintf("Content-Length: %d", len(echo))
 		responesBody = echo
 	default:
 		status = 404
