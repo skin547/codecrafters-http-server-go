@@ -65,6 +65,9 @@ func main() {
 // path contain path and query string
 func splitPath(path string) (string, string) {
 	splited := strings.Split(path, "?")
+	if len(splited) == 1 {
+		return splited[0], ""
+	}
 	return splited[0], splited[1]
 }
 
