@@ -36,11 +36,24 @@ func main() {
 	status := 200
 	msg := "OK"
 	responseHeader := "" //Content-Length: 0
-	if paths != "/" {
+	responesBody := ""
+
+	if req.path == "/" {
+		responseHeader = "Content-Length: 0"
+	} else if strings.HasPrefix(req.path, "/echo/") {
+		splitedPath := strings.Split(req.path, "/echo/")
+		// echo the request path follow by echo/ as response
+		echo := splitedPath[1]
+
+		responseHeader += "Content-Type: text/plain"
+		responseHeader += CRLF
+		responseHeader = fmt.Sprintf("Content-Length: %d", len(echo)+1)
+		responesBody = echo
+	} else {
 		status = 404
 		msg = "Not Found"
 	}
-	statusLine := fmt.Sprintf("%s %d %s", versoin, status, msg)
+	statusLine := fmt.Sprintf("%s %d %s", req.version, status, msg)
 	response := []byte(fmt.Sprintf("%s%s%s%s", statusLine, CRLF, CRLF, responseHeader))
 	conn.Write(response)
 	if err != nil {
