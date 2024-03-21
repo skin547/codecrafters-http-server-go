@@ -31,25 +31,32 @@ func main() {
 	request := string(buf[:requestSize])
 
 	lines := strings.Split(request, CRLF)
-	startLine := strings.Split(lines[0], " ")
-	method := startLine[0]
-	path := startLine[1]
-	versoin := startLine[2]
+	requestLine := strings.Split(lines[0], " ")
+	method := requestLine[0]
 
-	fmt.Printf("method: %s, path: %s, version: %s\n", method, path, versoin)
+	paths, query := splitPath(requestLine[1])
+	versoin := requestLine[2]
+
+	fmt.Printf("method: %s, path: %s, query: %s, version: %s\n", method, paths, query, versoin)
 
 	status := 200
 	msg := "OK"
 	responseHeader := "" //Content-Length: 0
-	if path != "/" {
+	if paths != "/" {
 		status = 404
 		msg = "Not Found"
 	}
-	responseStartLine := fmt.Sprintf("%s %d %s", versoin, status, msg)
-	response := []byte(fmt.Sprintf("%s%s%s%s", responseStartLine, CRLF, CRLF, responseHeader))
+	statusLine := fmt.Sprintf("%s %d %s", versoin, status, msg)
+	response := []byte(fmt.Sprintf("%s%s%s%s", statusLine, CRLF, CRLF, responseHeader))
 	conn.Write(response)
 	if err != nil {
 		fmt.Println("Error accepting connection: ", err.Error())
 		os.Exit(1)
 	}
+}
+
+// path contain path and query string
+func splitPath(path string) (string, string) {
+	splited := strings.Split(path, "?")
+	return splited[0], splited[1]
 }
