@@ -30,14 +30,8 @@ func main() {
 	}
 	request := string(buf[:requestSize])
 
-	lines := strings.Split(request, CRLF)
-	requestLine := strings.Split(lines[0], " ")
-	method := requestLine[0]
-
-	paths, query := splitPath(requestLine[1])
-	versoin := requestLine[2]
-
-	fmt.Printf("method: %s, path: %s, query: %s, version: %s\n", method, paths, query, versoin)
+	req := ParseRequest(request)
+	fmt.Printf("method: %s, path: %s, query: %s, version: %s\n", req.method, req.path, req.query, req.version)
 
 	status := 200
 	msg := "OK"
@@ -59,4 +53,21 @@ func main() {
 func splitPath(path string) (string, string) {
 	splited := strings.Split(path, "?")
 	return splited[0], splited[1]
+}
+
+type Request struct {
+	method  string
+	path    string
+	query   string
+	version string
+}
+
+func ParseRequest(request string) Request {
+	lines := strings.Split(request, CRLF)
+	requestLine := strings.Split(lines[0], " ")
+	method := requestLine[0]
+
+	paths, query := splitPath(requestLine[1])
+	versoin := requestLine[2]
+	return Request{method, paths, query, versoin}
 }
