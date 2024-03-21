@@ -16,7 +16,12 @@ func main() {
 		os.Exit(1)
 	}
 
-	_, err = l.Accept()
+	conn, err := l.Accept()
+
+	responseStatus := "HTTP/1.1 200 OK"
+	responseHeader := "" //Content-Length: 0
+	response := []byte(fmt.Sprintf("%s\r\n%s\r\n", responseStatus, responseHeader))
+	conn.Write(response)
 	if err != nil {
 		fmt.Println("Error accepting connection: ", err.Error())
 		os.Exit(1)
