@@ -38,12 +38,15 @@ func main() {
 
 	fmt.Printf("method: %s, path: %s, version: %s\n", method, path, versoin)
 
-	responseStatus := "HTTP/1.1 200 OK"
+	status := 200
+	msg := "OK"
 	responseHeader := "" //Content-Length: 0
 	if path != "/" {
-		responseStatus = "HTTP/1.1 404 Not Found"
+		status = 404
+		msg = "Not Found"
 	}
-	response := []byte(fmt.Sprintf("%s%s%s%s", responseStatus, CRLF, CRLF, responseHeader))
+	responseStartLine := fmt.Sprintf("%s %d %s", versoin, status, msg)
+	response := []byte(fmt.Sprintf("%s%s%s%s", responseStartLine, CRLF, CRLF, responseHeader))
 	conn.Write(response)
 	if err != nil {
 		fmt.Println("Error accepting connection: ", err.Error())
