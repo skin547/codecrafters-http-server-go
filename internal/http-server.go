@@ -66,8 +66,15 @@ func (h *HttpServer) Handle(conn net.Conn) {
 
 		data, err := h.storage.read(fileName)
 		if err != nil {
-			res.statusCode = 500
-			res.statusMsg = "Internal Server Error"
+			switch err.(type) {
+			case *NotFoundError:
+				res.statusCode = 404
+				res.statusMsg = "Not Found"
+			case *InternalServerError:
+			default:
+				res.statusCode = 500
+				res.statusMsg = "Internal Server Error"
+			}
 			break
 		}
 		res.body = string(data)
@@ -78,9 +85,12 @@ func (h *HttpServer) Handle(conn net.Conn) {
 
 		err = h.storage.write(fileName, []byte(req.body))
 		if err != nil {
-			fmt.Printf("Error writing file: %s\n", err)
-			res.statusCode = 500
-			res.statusMsg = "Internal Server Error"
+			switch err.(type) {
+			case *InternalServerError:
+			default:
+				res.statusCode = 500
+				res.statusMsg = "Internal Server Error"
+			}
 			break
 		}
 		res.body = "ok"
