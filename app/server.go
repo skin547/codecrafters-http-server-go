@@ -73,6 +73,7 @@ func handle(conn net.Conn) {
 	case strings.HasPrefix(req.path, "/files/"):
 		splitedPath := strings.Split(req.path, "/files/")
 		fileName := splitedPath[1]
+		fmt.Printf("fileName: %s\n", fileName)
 		// check if file exist
 		filePath := fmt.Sprintf("files/%s", fileName)
 		if _, err := os.Stat(filePath); os.IsNotExist(err) {
