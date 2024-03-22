@@ -126,8 +126,7 @@ func handle(conn net.Conn) {
 		res.statusMsg = "Not Found"
 	}
 
-	str := SerializeResponse(res)
-	conn.Write([]byte(str))
+	conn.Write([]byte(res.Serialize()))
 }
 
 func readFile(filePath string) ([]byte, error) {
@@ -191,19 +190,19 @@ func ParseRequest(request string) Request {
 }
 
 type Response struct {
-	version string
+	version    string
 	statusCode int
-	statusMsg string
-	headers map[string]string
-	body   string
+	statusMsg  string
+	headers    map[string]string
+	body       string
 }
 
-func SerializeResponse(res Response) string {
-	res.headers["Content-Length"] = strconv.Itoa(len(res.body))
+func (r *Response) Serialize() string {
+	r.headers["Content-Length"] = strconv.Itoa(len(r.body))
 	headers := ""
 
-	for key, value := range res.headers {
+	for key, value := range r.headers {
 		headers += fmt.Sprintf("%s: %s%s", key, value, CRLF)
 	}
-	return fmt.Sprintf("%s %d %s%s%s%s%s", res.version, res.statusCode, res.statusMsg, CRLF, headers, CRLF, res.body)
+	return fmt.Sprintf("%s %d %s%s%s%s%s", r.version, r.statusCode, r.statusMsg, CRLF, headers, CRLF, r.body)
 }
