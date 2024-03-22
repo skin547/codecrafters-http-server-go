@@ -23,22 +23,19 @@ func NewFileStorage(rootDir string) *FileStorage {
 func (f *FileStorage) read(fileName string) ([]byte, error) {
 	filePath := fmt.Sprintf("%s/%s", f.rootDir, fileName)
 	if _, err := os.Stat(filePath); os.IsNotExist(err) {
-		// res.statusCode = 404
-		// res.statusMsg = "Not Found"
-		// break
-		return nil, fmt.Errorf("file not found: %s", err)
+		return nil, &NotFoundError{FileName: fileName}
 	}
 
 	file, err := os.Open(filePath)
 	if err != nil {
-		return nil, fmt.Errorf("error opening file: %s", err)
+		return nil, &InternalServerError{Reason: err.Error()}
 	}
 	defer file.Close()
 
 	data := make([]byte, 1024)
 	size, err := file.Read(data)
 	if err != nil {
-		return nil, fmt.Errorf("error reading file: %s", err)
+		return nil, &InternalServerError{Reason: err.Error()}
 	}
 	return data[:size], nil
 }
