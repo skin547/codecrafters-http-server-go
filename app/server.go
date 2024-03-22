@@ -10,6 +10,7 @@ import (
 )
 
 const CRLF = "\r\n"
+
 var public string
 
 func main() {
@@ -64,13 +65,14 @@ func handle(conn net.Conn) {
 	req := ParseRequest(request)
 	fmt.Printf("method: %s, path: %s, query: %s, version: %s\n", req.method, req.path, req.query, req.version)
 	fmt.Printf("headers: %v\n", req.headers)
+	fmt.Printf("body: %v\n", req.body)
 
 	res := Response{
-		body: "",
-		version: req.version,
+		body:       "",
+		version:    "HTTP/1.1",
 		statusCode: 200,
-		statusMsg: "OK",
-		headers: make(map[string]string),
+		statusMsg:  "OK",
+		headers:    make(map[string]string),
 	}
 
 	switch {
@@ -115,6 +117,7 @@ func handle(conn net.Conn) {
 		filePath := fmt.Sprintf("%s/%s", public, fileName)
 		err = os.WriteFile(filePath, []byte(req.body), 0644)
 		if err != nil {
+			fmt.Printf("Error writing file: %s\n", err)
 			res.statusCode = 500
 			res.statusMsg = "Internal Server Error"
 			break
@@ -183,7 +186,7 @@ func ParseRequest(request string) Request {
 	version := requestLine[2]
 	body := ""
 	if method == "POST" {
-		body := lines[len(lines)-1]
+		body = lines[len(lines)-1]
 		headers["Content-Length"] = strconv.Itoa(len(body))
 	}
 	return Request{method, paths, query, version, headers, body}
