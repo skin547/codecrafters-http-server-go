@@ -18,15 +18,26 @@ func main() {
 		fmt.Println("Failed to bind to port 4221")
 		os.Exit(1)
 	}
-
-	conn, err := l.Accept()
-	if err != nil {
-		fmt.Println("Error accepting connection: ", err.Error())
+	defer l.Close()
+	for {
+		conn, err := l.Accept()
+		if err != nil {
+			fmt.Println("Error accepting connection: ", err.Error())
+			conn.Close()
+		}
+		go handle(conn)
 	}
+}
+
+func handle(conn net.Conn) {
+	defer conn.Close()
+
 	buf := make([]byte, 1024)
 	requestSize, err := conn.Read(buf)
 	if err != nil {
-		fmt.Println("Error accepting connection: ", err.Error())
+		fmt.Println("Error reading connection: ", err.Error())
+		conn.Close()
+		return
 	}
 	request := string(buf[:requestSize])
 
@@ -41,7 +52,7 @@ func main() {
 
 	switch {
 	case req.path == "/":
-		// DO NOTHING
+
 	case strings.HasPrefix(req.path, "/echo/"):
 		splitedPath := strings.Split(req.path, "/echo/")
 		echo := splitedPath[1]
@@ -66,10 +77,6 @@ func main() {
 	statusLine := fmt.Sprintf("%s %d %s", req.version, status, msg)
 	response := []byte(fmt.Sprintf("%s%s%s%s%s%s%s", statusLine, CRLF, responseHeader, CRLF, CRLF, responesBody, CRLF))
 	conn.Write(response)
-	if err != nil {
-		fmt.Println("Error accepting connection: ", err.Error())
-		os.Exit(1)
-	}
 }
 
 // path contain path and query string
