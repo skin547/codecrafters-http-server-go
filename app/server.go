@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"net"
 	"os"
@@ -9,10 +10,14 @@ import (
 )
 
 const CRLF = "\r\n"
+var public string
 
 func main() {
 	// You can use print statements as follows for debugging, they'll be visible when running tests.
 	fmt.Println("Logs from your program will appear here!")
+
+	flag.StringVar(&public, "directory", "./public", "files directory")
+	flag.Parse()
 
 	l, err := net.Listen("tcp", "0.0.0.0:4221")
 	if err != nil {
@@ -75,7 +80,7 @@ func handle(conn net.Conn) {
 		fileName := splitedPath[1]
 		fmt.Printf("fileName: %s\n", fileName)
 		// check if file exist
-		filePath := fmt.Sprintf("files/%s", fileName)
+		filePath := fmt.Sprintf("%s/%s", public, fileName)
 		if _, err := os.Stat(filePath); os.IsNotExist(err) {
 			res.statusCode = 404
 			res.statusMsg = "Not Found"
