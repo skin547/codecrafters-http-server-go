@@ -75,7 +75,7 @@ func handle(conn net.Conn) {
 		res.body = userAgent
 
 		res.headers["Content-Type"] = "text/plain"
-	case strings.HasPrefix(req.path, "/files/"):
+	case req.method == "GET" && strings.HasPrefix(req.path, "/files/"):
 		splitedPath := strings.Split(req.path, "/files/")
 		fileName := splitedPath[1]
 		fmt.Printf("fileName: %s\n", fileName)
@@ -87,25 +87,26 @@ func handle(conn net.Conn) {
 			break
 		}
 
-		file, err := os.Open(filePath)
+		data, err := readFile(filePath)
 		if err != nil {
-			fmt.Println(err)
 			res.statusCode = 500
 			res.statusMsg = "Internal Server Error"
 			break
 		}
-		defer file.Close()
-		// write to response body as string
-		data := make([]byte, 1024)
-		size, err := file.Read(data)
-		if err != nil {
-			fmt.Println(err)
-			res.statusCode = 500
-			res.statusMsg = "Internal Server Error"
-			break
-		}
-		res.body = string(data[:size])
+		res.body = string(data)
 		res.headers["Content-Type"] = "application/octet-stream"
+	case req.method == "POST" && strings.HasPrefix(req.path, "/files/"):
+		splitedPath := strings.Split(req.path, "/files/")
+		fileName := splitedPath[1]
+		filePath := fmt.Sprintf("%s/%s", public, fileName)
+		err = os.WriteFile(filePath, []byte(req.body), 0644)
+		if err != nil {
+			res.statusCode = 500
+			res.statusMsg = "Internal Server Error"
+			break
+		}
+		res.body = "ok"
+		res.statusCode = 201
 	default:
 		res.statusCode = 404
 		res.statusMsg = "Not Found"
@@ -113,6 +114,21 @@ func handle(conn net.Conn) {
 
 	str := SerializeResponse(res)
 	conn.Write([]byte(str))
+}
+
+func readFile(filePath string) ([]byte, error) {
+	file, err := os.Open(filePath)
+	if err != nil {
+		return nil, fmt.Errorf("error opening file: %s", err)
+	}
+	defer file.Close()
+
+	data := make([]byte, 1024)
+	size, err := file.Read(data)
+	if err != nil {
+		return nil, fmt.Errorf("error reading file: %s", err)
+	}
+	return data[:size], nil
 }
 
 // path contain path and query string
@@ -130,6 +146,7 @@ type Request struct {
 	query   string
 	version string
 	headers map[string]string
+	body    string
 }
 
 func ParseRequest(request string) Request {
@@ -150,8 +167,13 @@ func ParseRequest(request string) Request {
 	}
 
 	paths, query := splitPath(requestLine[1])
-	versoin := requestLine[2]
-	return Request{method, paths, query, versoin, headers}
+	version := requestLine[2]
+	body := ""
+	if method == "POST" {
+		body := lines[len(lines)-1]
+		headers["Content-Length"] = strconv.Itoa(len(body))
+	}
+	return Request{method, paths, query, version, headers, body}
 }
 
 type Response struct {
