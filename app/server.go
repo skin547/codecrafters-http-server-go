@@ -105,7 +105,7 @@ func handle(conn net.Conn) {
 			break
 		}
 		res.body = string(data[:size])
-		res.headers["Content-Type"] = "text/plain"
+		res.headers["Content-Type"] = "application/octet-stream"
 	default:
 		res.statusCode = 404
 		res.statusMsg = "Not Found"
