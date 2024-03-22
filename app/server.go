@@ -32,6 +32,7 @@ func main() {
 
 	req := ParseRequest(request)
 	fmt.Printf("method: %s, path: %s, query: %s, version: %s\n", req.method, req.path, req.query, req.version)
+	fmt.Printf("headers: %v\n", req.headers)
 
 	status := 200
 	msg := "OK"
@@ -49,6 +50,15 @@ func main() {
 		responseHeader += CRLF
 		responseHeader += fmt.Sprintf("Content-Length: %d", len(echo))
 		responesBody = echo
+	case strings.HasPrefix(req.path, "/user-agent"):
+		userAgent, exist := req.headers["User-Agent"]
+		if !exist {
+			userAgent = "Unknown"
+		}
+		responesBody = userAgent
+		responseHeader += "Content-Type: text/plain"
+		responseHeader += CRLF
+		responseHeader += fmt.Sprintf("Content-Length: %d", len(responesBody))
 	default:
 		status = 404
 		msg = "Not Found"
@@ -76,14 +86,27 @@ type Request struct {
 	path    string
 	query   string
 	version string
+	headers map[string]string
 }
 
 func ParseRequest(request string) Request {
 	lines := strings.Split(request, CRLF)
 	requestLine := strings.Split(lines[0], " ")
 	method := requestLine[0]
+	headers := make(map[string]string)
+
+	if len(lines) > 1 {
+		for _, line := range lines[1:] {
+			splited := strings.Split(line, ": ")
+			if len(splited) == 2 {
+				key := splited[0]
+				value := splited[1]
+				headers[key] = value
+			}
+		}
+	}
 
 	paths, query := splitPath(requestLine[1])
 	versoin := requestLine[2]
-	return Request{method, paths, query, versoin}
+	return Request{method, paths, query, versoin, headers}
 }
