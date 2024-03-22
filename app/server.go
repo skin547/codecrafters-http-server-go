@@ -56,7 +56,6 @@ func handle(conn net.Conn) {
 
 	switch {
 	case req.path == "/":
-
 	case strings.HasPrefix(req.path, "/echo/"):
 		splitedPath := strings.Split(req.path, "/echo/")
 		echo := splitedPath[1]
@@ -70,6 +69,36 @@ func handle(conn net.Conn) {
 		}
 		res.body = userAgent
 
+		res.headers["Content-Type"] = "text/plain"
+	case strings.HasPrefix(req.path, "/files/"):
+		splitedPath := strings.Split(req.path, "/files/")
+		fileName := splitedPath[1]
+		// check if file exist
+		filePath := fmt.Sprintf("files/%s", fileName)
+		if _, err := os.Stat(filePath); os.IsNotExist(err) {
+			res.statusCode = 404
+			res.statusMsg = "Not Found"
+			break
+		}
+
+		file, err := os.Open(filePath)
+		if err != nil {
+			fmt.Println(err)
+			res.statusCode = 500
+			res.statusMsg = "Internal Server Error"
+			break
+		}
+		defer file.Close()
+		// write to response body as string
+		data := make([]byte, 1024)
+		size, err := file.Read(data)
+		if err != nil {
+			fmt.Println(err)
+			res.statusCode = 500
+			res.statusMsg = "Internal Server Error"
+			break
+		}
+		res.body = string(data[:size])
 		res.headers["Content-Type"] = "text/plain"
 	default:
 		res.statusCode = 404
