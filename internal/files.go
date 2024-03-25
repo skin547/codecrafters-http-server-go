@@ -15,6 +15,18 @@ type FileStorage struct {
 }
 
 func NewFileStorage(rootDir string) *FileStorage {
+	// if directory not exist, create one
+	_, err := os.Stat(rootDir)
+	if err != nil {
+		if os.IsNotExist(err) {
+			err = os.MkdirAll(rootDir, 0755)
+			if err != nil {
+				panic(fmt.Sprintf("Error creating directory: %s", err.Error()))
+			}
+		} else {
+			panic(fmt.Sprintf("Error checking directory: %s", err.Error()))
+		}
+	}
 	return &FileStorage{
 		rootDir: rootDir,
 	}
